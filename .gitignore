@@ -1,0 +1,11 @@
+# Per-user settings and today's count - no reason to commit these
+KeyboardCounter.ini
+
+# Build byproducts
+*.pdb
+*.obj
+
+# Editor / tooling local state
+.claude/
+.vs/
+*.user
