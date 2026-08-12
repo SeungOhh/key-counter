@@ -6,6 +6,9 @@ KeyboardCounter.ini
 *.obj
 tools/out/
 
+# Raw screen recording the demo GIF was made from - docs/demo.gif is the deliverable
+src/*.mp4
+
 # Editor / tooling local state
 .claude/
 .vs/

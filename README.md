@@ -3,7 +3,7 @@
 A tiny always-on-top Windows widget that shows how fast you are typing, right now.
 Like an old taxi meter: **the cat runs while you type, sits when you stop, and falls asleep if you rest.**
 
-![the three states](docs/states.png)
+![demo](docs/demo.gif)
 
 **[English](#english) · [한국어](#한국어)**
 
@@ -71,6 +71,8 @@ The entire source is one readable file → [`KeyboardCounter.cs`](KeyboardCounte
 | **1hr** | Keystrokes in the last 60 minutes (only while the widget was running) |
 | **TODAY** | Today's total. Resets automatically at midnight |
 | **Cat** | Runs while you type, sits when you stop, sleeps after 10 seconds of rest |
+
+![running, sitting, sleeping](docs/states.png)
 
 The number and graph **change colour with speed**: grey → sky → green → yellow → orange → red.
 
@@ -223,6 +225,8 @@ API입니다. 그래서 무엇을 하고 무엇을 안 하는지 분명히 적�
 | **1hr** | 최근 60분 동안 누른 횟수 (위젯이 켜져 있던 동안만) |
 | **TODAY** | 오늘 누적. 자정이 지나면 자동으로 0부터 다시 셉니다 |
 | **고양이** | 치는 중엔 달리고, 멈추면 앉고, 10초 넘게 쉬면 잠듭니다 |
+
+![달리기, 앉기, 잠](docs/states.png)
 
 숫자와 그래프 **색은 타수에 따라** 회색 → 하늘 → 초록 → 노랑 → 주황 → 빨강으로 바뀝니다.
 
