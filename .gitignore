@@ -4,6 +4,7 @@ KeyboardCounter.ini
 # Build byproducts
 *.pdb
 *.obj
+tools/out/
 
 # Editor / tooling local state
 .claude/

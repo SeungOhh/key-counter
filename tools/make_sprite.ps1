@@ -1,6 +1,16 @@
-﻿# 32x32 sprite sheet. Only the background CONNECTED TO THE OUTER EDGE is made transparent,
-# so cream-coloured areas inside the cat (chest, paws) survive.
-# Last frame is the sitting pose, used when nothing is being typed.
+﻿# Rebuilds the sprite sheet embedded in KeyboardCounter.cs from the images in src/.
+#
+# Only the background CONNECTED TO THE OUTER EDGE is made transparent, so cream-coloured
+# areas inside the cat (chest, paws) survive. Numbered files form the run cycle, then
+# sitting.png and sleep.png are appended as the last two frames.
+#
+# Usage:  powershell -ExecutionPolicy Bypass -File tools\make_sprite.ps1
+#
+# Writes to tools\out\:
+#   cat32.png          the sheet itself
+#   cat32_preview.png  the sheet at 5x on dark and grey backdrops, to spot leftover halos
+#   sprite.cs.txt      the SPRITE_W / SPRITE_H / SPRITE_PNG block to paste into
+#                      KeyboardCounter.cs, replacing the existing one
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 
@@ -71,8 +81,11 @@ public static class Knock {
 "@
 Add-Type -TypeDefinition $helper -ReferencedAssemblies System.Drawing
 
-$srcDir = 'C:\Users\osy04\Desktop\html\keyboard_counter\src'
-$work   = 'C:\Users\osy04\AppData\Local\Temp\claude\c--Users-osy04-Desktop-html-keyboard-counter\27084091-1e08-4568-b6e8-5f55997701e1\scratchpad'
+$root   = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$srcDir = Join-Path $root 'src'
+$work   = Join-Path $root 'tools\out'
+if (-not (Test-Path $srcDir)) { throw "source images not found: $srcDir" }
+if (-not (Test-Path $work)) { New-Item -ItemType Directory -Path $work | Out-Null }
 $FW = 32; $FH = 32
 $TOL = 60
 
@@ -104,7 +117,7 @@ foreach ($f in $all) {
 }
 $sg.Dispose()
 
-$png = Join-Path $work 'cat32c.png'
+$png = Join-Path $work 'cat32.png'
 $sheet.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
 
 # preview on both a dark and a light backdrop so leftover halos are obvious
@@ -122,7 +135,7 @@ $pg.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]:
 $pg.DrawString('on grey (checks for halos)', $fnt, $lab, 6, $y2)
 $pg.DrawImage($sheet, 0, ($y2 + 18), $sheet.Width * 5, $FH * 5)
 $pg.Dispose()
-$prev.Save((Join-Path $work 'cat32c_preview.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+$prev.Save((Join-Path $work 'cat32_preview.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 $prev.Dispose()
 $sheet.Dispose()
 
@@ -140,6 +153,9 @@ for ($p = 0; $p -lt $b64.Length; $p += 110) {
     $term = if (($p + 110) -ge $b64.Length) { ';' } else { ' +' }
     [void]$sb.AppendLine('            "' + $chunk + '"' + $term)
 }
-Set-Content -Path (Join-Path $work 'sprite32c.cs.txt') -Value $sb.ToString() -Encoding utf8
+Set-Content -Path (Join-Path $work 'sprite.cs.txt') -Value $sb.ToString() -Encoding utf8
 Write-Host ("run = 0..{0}, sitting = {1}, sleep = {2}" -f ($run.Count - 1), $run.Count, ($run.Count + 1))
+Write-Host ("wrote {0}" -f $work)
+Write-Host "Paste sprite.cs.txt over the SPRITE_W / SPRITE_H / SPRITE_PNG block in KeyboardCounter.cs,"
+Write-Host "then re-check CROP_X/Y/W/H if the artwork's bounds changed."
 

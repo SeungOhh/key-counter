@@ -28,8 +28,9 @@ if ($running) {
 
 Write-Host "Compiling: $src"
 
-# /codepage:65001 is required: the source is UTF-8 without a BOM, and the legacy
-# compiler would otherwise decode Korean string literals using the ANSI code page.
+# /codepage:65001 keeps the legacy compiler reading the source as UTF-8. The source is
+# ASCII today, but without this flag a BOM-less file with any non-ASCII character would be
+# decoded using the ANSI code page instead.
 & $csc /nologo /target:winexe /optimize+ /platform:anycpu /codepage:65001 `
     /out:"$out" `
     /reference:System.dll `
