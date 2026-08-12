@@ -85,11 +85,19 @@ Auto-repeat from holding a key down counts only once.
 |---|---|
 | Move it | Drag with the left mouse button |
 | Open settings | **Right-click** the widget |
-| Quit | Right-click → Exit |
+| Get it out of the way | Right-click → **Hide to tray** |
+| Bring it back | **Double-click the tray icon**, or right-click it → Show widget |
+| Quit | Right-click the widget or the tray icon → Exit |
 
 The right-click menu offers **Size** (Small / Normal / Large / Extra large),
 **Response** speed (0.7s / 1.2s / 2.5s), **Always on top**, **Run at Windows startup**,
 **Reset today's count**, and **Reset position**.
+
+**Tray icon.** A sitting-cat icon sits in the notification area the whole time the widget runs.
+Hiding the widget does not stop anything — the hook keeps counting, so `1hr` and `TODAY` stay
+accurate while it is out of sight, and hovering the tray icon shows the current rate and today's
+total. On Windows 11 new tray icons start in the **overflow flyout** (the `^` next to the clock);
+drag it onto the taskbar if you want it always visible.
 
 ### Performance
 
@@ -239,11 +247,19 @@ API입니다. 그래서 무엇을 하고 무엇을 안 하는지 분명히 적�
 |---|---|
 | 옮기기 | 위젯을 왼쪽 버튼으로 끌기 |
 | 설정 열기 | 위젯 위에서 **오른쪽 클릭** |
-| 끄기 | 우클릭 → Exit |
+| 잠깐 치우기 | 우클릭 → **Hide to tray** |
+| 다시 띄우기 | **트레이 아이콘 더블클릭**, 또는 우클릭 → Show widget |
+| 끄기 | 위젯이나 트레이 아이콘 우클릭 → Exit |
 
 우클릭 메뉴에서 **Size**(크기), **Response**(반응 속도), **Always on top**(항상 위),
 **Run at Windows startup**(시작 시 실행), **Reset today's count**(오늘 타수 초기화),
 **Reset position**(위치 초기화)을 바꿀 수 있습니다.
+
+**트레이 아이콘.** 실행 중에는 알림 영역에 앉아 있는 고양이 아이콘이 계속 떠 있습니다.
+위젯을 숨겨도 집계는 멈추지 않습니다 — 후크가 계속 세므로 안 보이는 동안에도 `1hr`·`TODAY` 가
+정확하고, 트레이 아이콘에 마우스를 올리면 현재 타수와 오늘 누적이 나옵니다.
+윈도우 11은 새 트레이 아이콘을 **숨겨진 아이콘(시계 옆 `^`)** 안에 넣습니다.
+항상 보이게 하려면 거기서 작업표시줄로 끌어다 놓으면 됩니다.
 
 ### 성능
 

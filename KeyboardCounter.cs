@@ -458,6 +458,13 @@ namespace KeyboardCounter
         KeyboardHook hook;
         ContextMenuStrip menu;
 
+        // The widget has no taskbar button (WS_EX_TOOLWINDOW), so once hidden there would be no
+        // way back to it. The tray icon is that way back, and the way to quit while hidden.
+        NotifyIcon tray;
+        ContextMenuStrip trayMenu;
+        Icon trayIcon;
+        ToolStripMenuItem trayShowItem;
+
         // Rendering resources (rebuilt only when the scale or DPI changes)
         float scale = 1f;
         int dpi = 96;
@@ -716,6 +723,7 @@ namespace KeyboardCounter
             leftFormat.LineAlignment = StringAlignment.Center;
 
             BuildMenu();
+            BuildTray();
 
             dpi = GetDpi();
             ApplyMetrics();
@@ -845,6 +853,7 @@ namespace KeyboardCounter
                 lastStatsMs = now;
                 cfg.RollOverDayIfNeeded();
                 cfg.SaveStatsIfDirty();
+                UpdateTrayText();   // on the same slow cadence; the tooltip is the only view when hidden
             }
 
             UpdateAccent(kpm);
@@ -1190,6 +1199,86 @@ namespace KeyboardCounter
             menu.Show(this, e.Location);
         }
 
+        // ------------------------------------------------------------------ tray icon
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool DestroyIcon(IntPtr hIcon);
+
+        // Builds the tray icon out of the embedded sprite so the exe still needs no .ico resource.
+        static Icon MakeTrayIcon()
+        {
+            if (sprite == null) return SystemIcons.Application;
+            try
+            {
+                using (Bitmap bmp = new Bitmap(32, 32, PixelFormat.Format32bppArgb))
+                {
+                    using (Graphics g = Graphics.FromImage(bmp))
+                    {
+                        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+                        g.PixelOffsetMode = PixelOffsetMode.Half;
+                        // the sitting pose, scaled up to fill the icon square
+                        g.DrawImage(sprite, new Rectangle(1, 3, 30, 25),
+                            SIT_FRAME * SPRITE_W + CROP_X, CROP_Y, CROP_W, CROP_H,
+                            GraphicsUnit.Pixel, spriteAttrs);
+                    }
+                    // GetHicon hands back a handle we own; clone into a managed icon and free it,
+                    // otherwise the handle leaks for the life of the process.
+                    IntPtr h = bmp.GetHicon();
+                    try { return (Icon)Icon.FromHandle(h).Clone(); }
+                    finally { DestroyIcon(h); }
+                }
+            }
+            catch { return SystemIcons.Application; }
+        }
+
+        void BuildTray()
+        {
+            trayMenu = new ContextMenuStrip();
+
+            trayShowItem = new ToolStripMenuItem("Show widget");
+            trayShowItem.Checked = true;
+            trayShowItem.Click += delegate { SetWidgetVisible(!Visible); };
+            trayMenu.Items.Add(trayShowItem);
+
+            trayMenu.Items.Add(new ToolStripSeparator());
+
+            ToolStripMenuItem quit = new ToolStripMenuItem("Exit");
+            quit.Click += delegate { Close(); };
+            trayMenu.Items.Add(quit);
+
+            trayIcon = MakeTrayIcon();
+            tray = new NotifyIcon();
+            tray.Icon = trayIcon;
+            tray.Text = "KeyboardCounter";
+            tray.ContextMenuStrip = trayMenu;
+            tray.DoubleClick += delegate { SetWidgetVisible(!Visible); };
+            tray.Visible = true;
+        }
+
+        // Hiding keeps the hook and the counters running - only the window goes away.
+        void SetWidgetVisible(bool show)
+        {
+            Visible = show;
+            if (show)
+            {
+                ClampToScreen();   // a display change while hidden could have stranded it
+                TopMost = cfg.TopMost;
+            }
+            if (trayShowItem != null) trayShowItem.Checked = show;
+        }
+
+        void UpdateTrayText()
+        {
+            if (tray == null) return;
+            // NotifyIcon.Text is capped at 63 characters.
+            string s = "KeyboardCounter\r\n"
+                     + displayKpm.ToString(CultureInfo.InvariantCulture) + " now, "
+                     + cfg.TodayStrokes.ToString("N0", CultureInfo.InvariantCulture) + " today";
+            if (s.Length > 63) s = s.Substring(0, 63);
+            try { tray.Text = s; }
+            catch { }
+        }
+
         void BuildMenu()
         {
             menu = new ContextMenuStrip();
@@ -1255,6 +1344,13 @@ namespace KeyboardCounter
                 SavePosition();
             };
             menu.Items.Add(reset);
+
+            menu.Items.Add(new ToolStripSeparator());
+
+            // Safe to offer because the tray icon is how it comes back.
+            ToolStripMenuItem hide = new ToolStripMenuItem("Hide to tray");
+            hide.Click += delegate { SetWidgetVisible(false); };
+            menu.Items.Add(hide);
 
             ToolStripMenuItem quit = new ToolStripMenuItem("Exit");
             quit.Click += delegate { Close(); };
@@ -1363,6 +1459,9 @@ namespace KeyboardCounter
         {
             SavePosition();
             timer.Stop();
+            // Clear the tray icon before the process goes away, or a dead icon lingers in the
+            // notification area until something makes the shell repaint it.
+            if (tray != null) tray.Visible = false;
             if (hook != null) hook.Dispose();
             base.OnFormClosing(e);
         }
@@ -1377,6 +1476,9 @@ namespace KeyboardCounter
                 areaPath.Dispose();
                 timer.Dispose();
                 if (menu != null) menu.Dispose();
+                if (tray != null) { tray.Visible = false; tray.Dispose(); }
+                if (trayMenu != null) trayMenu.Dispose();
+                if (trayIcon != null) trayIcon.Dispose();
             }
             base.Dispose(disposing);
         }
